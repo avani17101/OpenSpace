@@ -33,6 +33,7 @@
 #include <openspace/properties/scalar/boolproperty.h>
 #include <openspace/properties/scalar/intproperty.h>
 #include <openspace/properties/scalar/floatproperty.h>
+#include <openspace/properties/vector/vec3property.h>
 #include <openspace/util/updatestructures.h>
 
 #include <ghoul/opengl/textureunit.h>
@@ -92,18 +93,14 @@ private:
     properties::FloatProperty _groundAverageReflectanceP;
     properties::FloatProperty _groundRadianceEmittionP;
     properties::FloatProperty _rayleighHeightScaleP;
-    properties::FloatProperty _rayleighScatteringCoeffXP;
-    properties::FloatProperty _rayleighScatteringCoeffYP;
-    properties::FloatProperty _rayleighScatteringCoeffZP;
+    properties::Vec3Property  _rayleighScatteringCoeffP;
     properties::BoolProperty  _ozoneEnabledP;
     properties::FloatProperty _ozoneHeightScaleP;
     properties::FloatProperty _ozoneCoeffXP;
     properties::FloatProperty _ozoneCoeffYP;
     properties::FloatProperty _ozoneCoeffZP;
     properties::FloatProperty _mieHeightScaleP;
-    properties::FloatProperty _mieScatteringCoeffXP;
-    properties::FloatProperty _mieScatteringCoeffYP;
-    properties::FloatProperty _mieScatteringCoeffZP;
+    properties::Vec3Property  _mieScatteringCoeffP;
     properties::FloatProperty _mieScatteringExtinctionPropCoefficientP;
     properties::FloatProperty _mieAsymmetricFactorGP;
     properties::FloatProperty _sunIntensityP;
@@ -125,10 +122,8 @@ private:
     float _mieScattExtPropCoefProp = 1.f;
 
     glm::vec3 _mieExtinctionCoeff = glm::vec3(0.f);
-    glm::vec3 _rayleighScatteringCoeff = glm::vec3(0.f);
     glm::vec3 _ozoneExtinctionCoeff = glm::vec3(0.f);
-    glm::vec3 _mieScatteringCoeff = glm::dvec3(0.f);
-
+    
     // Atmosphere Debug
     bool _saveCalculationsToTexture = false;
     float _preCalculatedTexturesScale = 1.f;

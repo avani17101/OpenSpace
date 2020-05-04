@@ -103,24 +103,10 @@ namespace {
         "constant factor"
     };
 
-    constexpr openspace::properties::Property::PropertyInfo RayleighScatteringCoeffXInfo =
+    constexpr openspace::properties::Property::PropertyInfo RayleighScatteringCoeffInfo =
     {
-        "RayleighScatteringCoeffX",
-        "Rayleigh Scattering Coeff X (x10e-3)",
-        "Rayleigh sea-level scattering coefficients in meters"
-    };
-
-    constexpr openspace::properties::Property::PropertyInfo RayleighScatteringCoeffYInfo =
-    {
-        "RayleighScatteringCoeffY",
-        "Rayleigh Scattering Coeff Y (x10e-3)",
-        "Rayleigh sea-level scattering coefficients in meters"
-    };
-
-    constexpr openspace::properties::Property::PropertyInfo RayleighScatteringCoeffZInfo =
-    {
-        "RayleighScatteringCoeffZ",
-        "Rayleigh Scattering Coeff Z (x10e-3)",
+        "RayleighScatteringCoeff",
+        "Rayleigh Scattering Coefficients (x10e-3)",
         "Rayleigh sea-level scattering coefficients in meters"
     };
 
@@ -162,21 +148,9 @@ namespace {
         "constant factor"
     };
 
-    constexpr openspace::properties::Property::PropertyInfo MieScatteringCoeffXInfo = {
-        "MieScatteringCoeffX",
-        "Mie Scattering Coeff X (x10e-3)",
-        "Mie sea-level scattering coefficients in meters"
-    };
-
-    constexpr openspace::properties::Property::PropertyInfo MieScatteringCoeffYInfo = {
-        "MieScatteringCoeffY",
-        "Mie Scattering Coeff Y (x10e-3)",
-        "Mie sea-level scattering coefficients in meters"
-    };
-
-    constexpr openspace::properties::Property::PropertyInfo MieScatteringCoeffZInfo = {
-        "MieScatteringCoeffZ",
-        "Mie Scattering Coeff Z (x10e-3)",
+    constexpr openspace::properties::Property::PropertyInfo MieScatteringCoeffInfo = {
+        "MieScatteringCoeff",
+        "Mie Scattering Coefficients (x10e-3)",
         "Mie sea-level scattering coefficients in meters"
     };
 
@@ -231,19 +205,15 @@ RenderableAtmosphere::RenderableAtmosphere(const ghoul::Dictionary& dictionary)
     , _atmosphereHeightP(AtmosphereHeightInfo, 60.0f, 0.1f, 99.0f)
     , _groundAverageReflectanceP(AverageGroundReflectanceInfo, 0.1f, 0.0f, 1.0f)
     , _groundRadianceEmittionP(GroundRadianceEmittioninfo, 0.3f, 0.0f, 1.0f)
-    , _rayleighHeightScaleP(RayleighHeightScaleInfo, 8.0f, 0.1f, 20.0f)
-    , _rayleighScatteringCoeffXP(RayleighScatteringCoeffXInfo, 1.0f, 0.01f, 100.0f)
-    , _rayleighScatteringCoeffYP(RayleighScatteringCoeffYInfo, 1.0f, 0.01f, 100.0f)
-    , _rayleighScatteringCoeffZP(RayleighScatteringCoeffZInfo, 1.0f, 0.01f, 100.0f)
+    , _rayleighHeightScaleP(RayleighHeightScaleInfo, 8.0f, 0.1f, 50.0f)
+    , _rayleighScatteringCoeffP(RayleighScatteringCoeffInfo, glm::vec3(1.0f), glm::vec3(0.01f), glm::vec3(100.0f))
     , _ozoneEnabledP(OzoneLayerInfo, true)
-    , _ozoneHeightScaleP(OzoneHeightScaleInfo, 8.0f, 0.1f, 20.0f)
+    , _ozoneHeightScaleP(OzoneHeightScaleInfo, 8.0f, 0.1f, 50.0f)
     , _ozoneCoeffXP(OzoneLayerCoeffXInfo, 3.426f, 0.01f, 100.0f)
     , _ozoneCoeffYP(OzoneLayerCoeffYInfo, 8.298f, 0.01f, 100.0f)
     , _ozoneCoeffZP(OzoneLayerCoeffZInfo, 0.356f, 0.01f, 100.0f)
-    , _mieHeightScaleP(MieHeightScaleInfo, 1.2f, 0.1f, 20.0f)
-    , _mieScatteringCoeffXP(MieScatteringCoeffXInfo, 4.0f, 0.01f, 1000.0f)
-    , _mieScatteringCoeffYP(MieScatteringCoeffYInfo, 4.0f, 0.01f, 1000.0f)
-    , _mieScatteringCoeffZP(MieScatteringCoeffZInfo, 4.0f, 0.01f, 1000.0f)
+    , _mieHeightScaleP(MieHeightScaleInfo, 1.2f, 0.1f, 50.0f)
+    , _mieScatteringCoeffP(MieScatteringCoeffInfo, glm::vec3(4.0f), glm::vec3(0.01f), glm::vec3(1000.0f))
     , _mieScatteringExtinctionPropCoefficientP(
         MieScatteringExtinctionPropCoeffInfo,
         0.9f,
@@ -418,9 +388,10 @@ RenderableAtmosphere::RenderableAtmosphere(const ghoul::Dictionary& dictionary)
                 rayleighWavelengths
             );
 
+            glm::vec3 tmpRayleighScattCoeff(0.f);
             if (!rayleighDictionary.getValue(
                 "Coefficients.Scattering",
-                _rayleighScatteringCoeff))
+                tmpRayleighScattCoeff))
             {
                 errorReadingAtmosphereData = true;
                 LWARNINGC(
@@ -428,6 +399,9 @@ RenderableAtmosphere::RenderableAtmosphere(const ghoul::Dictionary& dictionary)
                     "No Rayleigh Scattering parameters specified for Atmosphere Effects. "
                     "Disabling atmosphere effects for this planet."
                 );
+            }
+            else {
+                _rayleighScatteringCoeffP = tmpRayleighScattCoeff * glm::vec3(1e3);
             }
 
             if (!rayleighDictionary.getValue(
@@ -483,13 +457,17 @@ RenderableAtmosphere::RenderableAtmosphere(const ghoul::Dictionary& dictionary)
                 );
             }
 
-            if (!mieDictionary.getValue("Coefficients.Scattering", _mieScatteringCoeff)) {
+            glm::vec3 tmpMieScattCoeff(0.f);
+            if (!mieDictionary.getValue("Coefficients.Scattering", tmpMieScattCoeff)) {
                 errorReadingAtmosphereData = true;
                 LWARNINGC(
                     identifier,
                     "No Mie Scattering parameters specified for Atmosphere Effects. "
                     "Disabling atmosphere effects for this planet."
                 );
+            }
+            else {
+                _mieScatteringCoeffP = tmpMieScattCoeff * glm::vec3(1e3);
             }
 
             if (!mieDictionary.getValue("Coefficients.Extinction", _mieExtinctionCoeff)) {
@@ -571,17 +549,8 @@ RenderableAtmosphere::RenderableAtmosphere(const ghoul::Dictionary& dictionary)
             _rayleighHeightScaleP.onChange(updateAtmosphere);
             addProperty(_rayleighHeightScaleP);
 
-            _rayleighScatteringCoeffXP = _rayleighScatteringCoeff.x * 1000.0f;
-            _rayleighScatteringCoeffXP.onChange(updateAtmosphere);
-            addProperty(_rayleighScatteringCoeffXP);
-
-            _rayleighScatteringCoeffYP = _rayleighScatteringCoeff.y * 1000.0f;
-            _rayleighScatteringCoeffYP.onChange(updateAtmosphere);
-            addProperty(_rayleighScatteringCoeffYP);
-
-            _rayleighScatteringCoeffZP = _rayleighScatteringCoeff.z * 1000.0f;
-            _rayleighScatteringCoeffZP.onChange(updateAtmosphere);
-            addProperty(_rayleighScatteringCoeffZP);
+            _rayleighScatteringCoeffP.onChange(updateAtmosphere);
+            addProperty(_rayleighScatteringCoeffP);
 
             _ozoneEnabledP = _ozoneLayerEnabled;
             _ozoneEnabledP.onChange(updateAtmosphere);
@@ -608,21 +577,15 @@ RenderableAtmosphere::RenderableAtmosphere(const ghoul::Dictionary& dictionary)
             _mieHeightScaleP.onChange(updateAtmosphere);
             addProperty(_mieHeightScaleP);
 
-            _mieScatteringCoeffXP = _mieScatteringCoeff.x * 1000.0f;
-            _mieScatteringCoeffXP.onChange(updateAtmosphere);
-            addProperty(_mieScatteringCoeffXP);
-
-            _mieScatteringCoeffYP = _mieScatteringCoeff.y * 1000.0f;
-            _mieScatteringCoeffYP.onChange(updateAtmosphere);
-            addProperty(_mieScatteringCoeffYP);
-
-            _mieScatteringCoeffZP = _mieScatteringCoeff.z * 1000.0f;
-            _mieScatteringCoeffZP.onChange(updateAtmosphere);
-            addProperty(_mieScatteringCoeffZP);
+            _mieScatteringCoeffP.onChange(updateAtmosphere);
+            addProperty(_mieScatteringCoeffP);
 
             _mieScatteringExtinctionPropCoefficientP = 
                 _mieScattExtPropCoefProp != 1.f ? _mieScattExtPropCoefProp :
-                _mieScatteringCoeff.x / _mieExtinctionCoeff.x;
+                (_mieScatteringCoeffP.value().x * 0.001f ) / _mieExtinctionCoeff.x;
+
+            _mieExtinctionCoeff = (_mieScatteringCoeffP.value() * glm::vec3(0.001f)) * (1.0f /
+                static_cast<float>(_mieScatteringExtinctionPropCoefficientP));
 
             _mieScatteringExtinctionPropCoefficientP.onChange(updateAtmosphere);
             addProperty(_mieScatteringExtinctionPropCoefficientP);
@@ -673,9 +636,9 @@ void RenderableAtmosphere::initializeGL() {
             _deferredcaster->setMieHeightScale(_mieHeightScale);
             _deferredcaster->setMiePhaseConstant(_miePhaseConstant);
             _deferredcaster->setSunRadianceIntensity(_sunRadianceIntensity);
-            _deferredcaster->setRayleighScatteringCoefficients(_rayleighScatteringCoeff);
+            _deferredcaster->setRayleighScatteringCoefficients(_rayleighScatteringCoeffP.value() * glm::vec3(0.001f));
             _deferredcaster->setOzoneExtinctionCoefficients(_ozoneExtinctionCoeff);
-            _deferredcaster->setMieScatteringCoefficients(_mieScatteringCoeff);
+            _deferredcaster->setMieScatteringCoefficients(_mieScatteringCoeffP.value() * glm::vec3(0.001f));
             _deferredcaster->setMieExtinctionCoefficients(_mieExtinctionCoeff);
             // TODO: Fix the ellipsoid nature of the renderable globe (JCC)
             //_deferredcaster->setEllipsoidRadii(_ellipsoid.radii());
@@ -746,28 +709,18 @@ void RenderableAtmosphere::updateAtmosphereParameters() {
     _planetAverageGroundReflectance = _groundAverageReflectanceP;
     _planetGroundRadianceEmittion   = _groundRadianceEmittionP;
     _rayleighHeightScale            = _rayleighHeightScaleP;
-    _rayleighScatteringCoeff = glm::vec3(
-        _rayleighScatteringCoeffXP * 0.001f,
-        _rayleighScatteringCoeffYP * 0.001f,
-        _rayleighScatteringCoeffZP * 0.001f
-    );
-    _ozoneLayerEnabled    = _ozoneEnabledP;
-    _ozoneHeightScale     = _ozoneHeightScaleP;
-    _ozoneExtinctionCoeff = glm::vec3(_ozoneCoeffXP.value() * 0.00001f,
+    _ozoneLayerEnabled              = _ozoneEnabledP;
+    _ozoneHeightScale               = _ozoneHeightScaleP;
+    _ozoneExtinctionCoeff           = glm::vec3(_ozoneCoeffXP.value() * 0.00001f,
         _ozoneCoeffYP.value() * 0.00001f,
         _ozoneCoeffZP.value() * 0.00001f);
-    _mieHeightScale     = _mieHeightScaleP;
-    _mieScatteringCoeff = glm::vec3(
-        _mieScatteringCoeffXP * 0.001f,
-        _mieScatteringCoeffYP * 0.001f,
-        _mieScatteringCoeffZP * 0.001f
-    );
-    _mieExtinctionCoeff         = _mieScatteringCoeff * (1.0f /
+    _mieHeightScale                 = _mieHeightScaleP;
+    _mieExtinctionCoeff             = (_mieScatteringCoeffP.value() * glm::vec3(0.001f)) * (1.0f /
                             static_cast<float>(_mieScatteringExtinctionPropCoefficientP));
-    _miePhaseConstant           = _mieAsymmetricFactorGP;
-    _sunRadianceIntensity       = _sunIntensityP;
-    _sunFollowingCameraEnabled  = _sunFollowingCameraEnabledP;
-    _hardShadows                = _hardShadowsEnabledP;
+    _miePhaseConstant               = _mieAsymmetricFactorGP;
+    _sunRadianceIntensity           = _sunIntensityP;
+    _sunFollowingCameraEnabled      = _sunFollowingCameraEnabledP;
+    _hardShadows                    = _hardShadowsEnabledP;
 
 
     if (_deferredcaster) {
@@ -783,9 +736,9 @@ void RenderableAtmosphere::updateAtmosphereParameters() {
         _deferredcaster->setMieHeightScale(_mieHeightScale);
         _deferredcaster->setMiePhaseConstant(_miePhaseConstant);
         _deferredcaster->setSunRadianceIntensity(_sunRadianceIntensity);
-        _deferredcaster->setRayleighScatteringCoefficients(_rayleighScatteringCoeff);
+        _deferredcaster->setRayleighScatteringCoefficients(_rayleighScatteringCoeffP.value() * glm::vec3(0.001f));
         _deferredcaster->setOzoneExtinctionCoefficients(_ozoneExtinctionCoeff);
-        _deferredcaster->setMieScatteringCoefficients(_mieScatteringCoeff);
+        _deferredcaster->setMieScatteringCoefficients(_mieScatteringCoeffP.value() * glm::vec3(0.001f));
         _deferredcaster->setMieExtinctionCoefficients(_mieExtinctionCoeff);
         _deferredcaster->enableSunFollowing(_sunFollowingCameraEnabled);
         //_deferredcaster->setEllipsoidRadii(_ellipsoid.radii());

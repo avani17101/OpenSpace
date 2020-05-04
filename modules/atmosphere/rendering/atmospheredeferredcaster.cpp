@@ -1156,6 +1156,7 @@ void AtmosphereDeferredcaster::executeCalculations(GLuint quadCalcVAO,
 }
 
 void AtmosphereDeferredcaster::preCalculateAtmosphereParam() {
+    std::cout << "--- Executing precomputation ---" << std::endl;
     //==========================================================
     //========= Load Shader Programs for Calculations ==========
     //==========================================================
