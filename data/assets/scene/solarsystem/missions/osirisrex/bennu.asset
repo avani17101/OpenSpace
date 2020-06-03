@@ -18,6 +18,14 @@ local models = asset.syncedResource({
     Version = 1
 })
 
+local images = asset.syncedResource({
+    Name = "Bennu Images",
+    Type = "HttpSynchronization",
+    Identifier = "osirisrex_bennu_images_approach",
+    Version = 1
+})
+
+
 local BENNU_BODY = "2101955"
 
 
@@ -40,39 +48,33 @@ local Bennu = {
         }, 
         ColorTexture = textures .. "/gray.png",
         Projection = {
-            Sequence   = asset.localResource('InstrumentTimes'),
-            SequenceType = "instrument-times",
+            Sequence   = { images },
+            SequenceType = "image-sequence",
             Observer   = "OSIRIS-REX",
             Target     = BENNU_BODY,
             Aberration = "NONE",
-            AspectRatio = 2,
-
             DataInputTranslation = {
                 Instruments = {
                     ORX_OCAMS_POLYCAM = {
                         DetectorType = "Camera",
                         Spice = { "ORX_OCAMS_POLYCAM" },
-                        Files = {
-                            "BaseballDiamond_PolyCam.txt",
-                            --"OrbitalB_Site08_PolyCamImages.txt",
-                            "Recon_225m_Equatorial_PolyCam.txt",
-                        },
                     },
-                    ORX_REXIS = {
-                        DetectorType = "Camera",
-                        Spice = { "ORX_REXIS" },
-                        Files = {
-                            "DetailedSurvey_EquatorialStations_Spectrometers.txt", 
-                            "Recon_225m_Equatorial_spectrometers.txt",
-                            "Recon_525m_Equatorial_spectrometers.txt",
-                        }
+                },
+                Target = { 
+                    Read  = {
+                        "TARGET_NAME",
+                        "INSTRUMENT_HOST_NAME",
+                        "INSTRUMENT_ID",
+                        "START_TIME",
+                        "STOP_TIME"
+                    },
+                    Convert = {
+                        ["2101955"] = { "2101955" },
+                        ["OSIRIS-REX"] = { "OSIRIS-REX" },
+                        ["ORX_OCAMS_POLYCAM"] = { "ORX_OCAMS_POLYCAM" },
                     }
-                },
-                Target = {
-                    Body = BENNU_BODY
-                },
+                }
             },
-
             Instrument = { -- INVALID DATA - JUST FOR TESTING
                 Name       = "ORX_OCAMS_POLYCAM",
                 Method     = "ELLIPSOID",

@@ -123,7 +123,7 @@ assetHelper.registerDashboardItems(asset, {
 
 asset.onInitialize(function ()
 
-    openspace.time.setTime("2018 10 30 23:00:00.500")
+    openspace.time.setTime("2018 NOV 2 04:13:00.500")
 
     sceneHelper.bindKeys(Keybindings)
 
