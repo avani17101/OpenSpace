@@ -183,3 +183,4 @@ void GalaxyRaycaster::setStepSize(float stepSize) {
 }
 
 } // namespace openspace
+ 

@@ -44,13 +44,6 @@ namespace {
         "This value specifies an image that is loaded from disk and is used as a texture "
         "that is applied to this plane. This image has to be square."
     };
-
-    constexpr openspace::properties::Property::PropertyInfo RenderableTypeInfo = {
-       "RenderableType",
-       "RenderableType",
-       "This value specifies if the plane should be rendered in the Background,"
-       "Opaque, Transparent, or Overlay rendering step."
-    };
 } // namespace
 
 namespace openspace {
@@ -66,12 +59,6 @@ documentation::Documentation RenderablePlaneImageLocal::Documentation() {
                 new StringVerifier,
                 Optional::No,
                 TextureInfo.description
-            },
-            {
-                RenderableTypeInfo.identifier,
-                new StringVerifier,
-                Optional::Yes,
-                RenderableTypeInfo.description
             },
             {
                 KeyLazyLoading,
@@ -106,30 +93,6 @@ RenderablePlaneImageLocal::RenderablePlaneImageLocal(const ghoul::Dictionary& di
     _textureFile->setCallback(
         [this](const ghoul::filesystem::File&) { _textureIsDirty = true; }
     );
-
-    if (dictionary.hasKey(RenderableTypeInfo.identifier)) {
-        std::string renderType = dictionary.value<std::string>(
-            RenderableTypeInfo.identifier
-        );
-        if (renderType == "Background") {
-            setRenderBin(Renderable::RenderBin::Background);
-        }
-        else if (renderType == "Opaque") {
-            setRenderBin(Renderable::RenderBin::Opaque);
-        }
-        else if (renderType == "PreDeferredTransparent") {
-            setRenderBin(Renderable::RenderBin::PreDeferredTransparent);
-        }
-        else if (renderType == "PostDeferredTransparent") {
-            setRenderBin(Renderable::RenderBin::PostDeferredTransparent);
-        }
-        else if (renderType == "Overlay") {
-            setRenderBin(Renderable::RenderBin::Overlay);
-        }
-    }
-    else {
-        setRenderBin(Renderable::RenderBin::Opaque);
-    }
 
     if (dictionary.hasKey(KeyLazyLoading)) {
         _isLoadingLazily = dictionary.value<bool>(KeyLazyLoading);

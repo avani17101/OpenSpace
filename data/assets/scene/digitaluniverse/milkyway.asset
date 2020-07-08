@@ -72,7 +72,8 @@ local plane = {
         -- Fade in value in the same unit as "Unit"
         FadeInDistances = { 3000.0, 50000.0 },
         PlaneMinSize = 5.0,
-        Unit = "pc"
+        Unit = "pc",
+        RenderBinMode = "PostDeferredTransparent"
     },
     GUI = {
         Name = "Milky Way Galaxy Image",

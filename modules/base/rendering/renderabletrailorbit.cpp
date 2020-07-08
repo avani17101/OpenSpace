@@ -97,13 +97,6 @@ namespace {
         "smoother the trail, but also more memory will be used."
     };
 
-    constexpr openspace::properties::Property::PropertyInfo RenderableTypeInfo = {
-       "RenderableType",
-       "RenderableType",
-       "This value specifies if the orbit should be rendered in the Background,"
-       "Opaque, Transparent, or Overlay rendering step. Default is Transparent."
-    };
-
 } // namespace
 
 namespace openspace {
@@ -126,12 +119,6 @@ documentation::Documentation RenderableTrailOrbit::Documentation() {
                 Optional::No,
                 ResolutionInfo.description
             },
-            {
-                RenderableTypeInfo.identifier,
-                new StringVerifier,
-                Optional::Yes,
-                RenderableTypeInfo.description
-            }
         }
     };
 
@@ -173,30 +160,6 @@ RenderableTrailOrbit::RenderableTrailOrbit(const ghoul::Dictionary& dictionary)
 
     // We store the vertices with (excluding the wrapping) decending temporal order
     _primaryRenderInformation.sorting = RenderInformation::VertexSorting::NewestFirst;
-
-    if (dictionary.hasKey(RenderableTypeInfo.identifier)) {
-        std::string renderType = dictionary.value<std::string>(
-            RenderableTypeInfo.identifier
-            );
-        if (renderType == "Background") {
-            setRenderBin(Renderable::RenderBin::Background);
-        }
-        else if (renderType == "Opaque") {
-            setRenderBin(Renderable::RenderBin::Opaque);
-        }
-        else if (renderType == "PreDeferredTransparent") {
-            setRenderBin(Renderable::RenderBin::PreDeferredTransparent);
-        }
-        else if (renderType == "PostDeferredTransparent") {
-            setRenderBin(Renderable::RenderBin::PostDeferredTransparent);
-        }
-        else if (renderType == "Overlay") {
-            setRenderBin(Renderable::RenderBin::Overlay);
-        }
-    }
-    else {
-        setRenderBin(Renderable::RenderBin::Overlay);
-    }
 }
 
 void RenderableTrailOrbit::initializeGL() {

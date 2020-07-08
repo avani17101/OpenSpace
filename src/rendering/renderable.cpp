@@ -32,9 +32,21 @@
 #include <ghoul/misc/profiling.h>
 #include <ghoul/opengl/programobject.h>
 
+#include <iostream>
+
 namespace {
     constexpr const char* KeyType = "Type";
     constexpr const char* KeyTag = "Tag";
+
+    // Fragile! Keep in sync with documentation
+    using OSRen = openspace::Renderable;
+    const std::map<std::string, OSRen::RenderBin> RenderBinModeConversion = {
+        { "Background", OSRen::RenderBin::Background },
+        { "Opaque", OSRen::RenderBin::Opaque },
+        { "PreDeferredTransparent", OSRen::RenderBin::PreDeferredTransparent},
+        { "PostDeferredTransparent", OSRen::RenderBin::PostDeferredTransparent},
+        { "Overlay", OSRen::RenderBin::Overlay}
+    };
 
     constexpr openspace::properties::Property::PropertyInfo EnabledInfo = {
         "Enabled",
@@ -59,6 +71,13 @@ namespace {
         "BoundingSphere",
         "Bounding Sphere",
         "The size of the bounding sphere radius."
+    };
+
+    constexpr openspace::properties::Property::PropertyInfo RenderBinModeInfo = {
+        "RenderBinMode",
+        "RenderBin Mode",
+        "Determines if the trails will be rendered after all other elements, including"
+        "atmospheres if needed."
     };
 
 } // namespace
@@ -92,7 +111,15 @@ documentation::Documentation Renderable::Documentation() {
                 new DoubleInRangeVerifier(0.0, 1.0),
                 Optional::Yes,
                 OpacityInfo.description
-            }
+            },
+            {
+                RenderBinModeInfo.identifier,
+                new StringInListVerifier(
+                {"Background", "Opaque", "PreDeferredTransparent",
+                 "PostDeferredTransparent", "Overlay"}),
+                Optional::Yes,
+                RenderBinModeInfo.description,
+            },
         }
     };
 }
@@ -120,9 +147,6 @@ Renderable::Renderable(const ghoul::Dictionary& dictionary)
 {
     ZoneScoped
 
-    // I can't come up with a good reason not to do this for all renderables
-    registerUpdateRenderBinFromOpacity();
-
     if (dictionary.hasKeyAndValue<std::string>(KeyTag)) {
         std::string tagName = dictionary.value<std::string>(KeyTag);
         if (!tagName.empty()) {
@@ -148,6 +172,16 @@ Renderable::Renderable(const ghoul::Dictionary& dictionary)
         _opacity = static_cast<float>(dictionary.value<double>(
             OpacityInfo.identifier)
        );
+    }
+
+    // I can't come up with a good reason not to do this for all renderables
+    registerUpdateRenderBinFromOpacity();
+
+    if (dictionary.hasKeyAndValue<std::string>(RenderBinModeInfo.identifier)) {
+        openspace::Renderable::RenderBin cfgRenderBin = RenderBinModeConversion.at(
+            dictionary.value<std::string>(RenderBinModeInfo.identifier)
+        );
+        setRenderBin(cfgRenderBin);
     }
 
     addProperty(_enabled);

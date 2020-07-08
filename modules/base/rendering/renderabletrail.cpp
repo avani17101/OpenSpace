@@ -68,14 +68,6 @@ namespace {
         { "Points+Lines", RenderingModeLinesPoints }
     };
 
-    // Fragile! Keep in sync with documentation
-    const std::map<std::string, openspace::Renderable::RenderBin> RenderBinModeConversion = {
-        { "Background", openspace::Renderable::RenderBin::Background },
-        { "Opaque", openspace::Renderable::RenderBin::Opaque },
-        { "PreDeferredTransparent", openspace::Renderable::RenderBin::PreDeferredTransparent},
-        { "PostDeferredTransparent", openspace::Renderable::RenderBin::PostDeferredTransparent}
-    };
-
     static const openspace::properties::PropertyOwner::PropertyOwnerInfo
         AppearanceInfo = {
             "Appearance",
@@ -129,14 +121,6 @@ namespace {
         "selected, only the line part is visible, if 'Points' is selected, only the "
         "corresponding points (and subpoints) are shown. 'Lines+Points' shows both parts."
     };
-
-    constexpr openspace::properties::Property::PropertyInfo RenderBinModeInfo = {
-        "RenderBinMode",
-        "RenderBin Mode",
-        "Determines if the trails will be rendered after all other elements, including"
-        "atmospheres if needed."
-    };
-
 } // namespace
 
 namespace openspace {
@@ -184,15 +168,6 @@ documentation::Documentation RenderableTrail::Documentation() {
                 Optional::Yes,
                 PointSizeInfo.description
             },
-            {
-                RenderingModeInfo.identifier,
-                new StringInListVerifier(
-                    // Taken from the RenderingModeConversion map above
-                    { "Lines", "Points", "Lines+Points", "Points+Lines" }
-                ),
-                Optional::Yes,
-                RenderingModeInfo.description
-            }
         }
     };
 }
@@ -226,7 +201,7 @@ RenderableTrail::Appearance::Appearance()
 RenderableTrail::RenderableTrail(const ghoul::Dictionary& dictionary)
     : Renderable(dictionary)
 {
-    setRenderBin(RenderBin::Overlay);
+    setRenderBin(RenderBin::PostDeferredTransparent);
     addProperty(_opacity);
 
     _translation = Translation::createFromDictionary(
@@ -270,13 +245,6 @@ RenderableTrail::RenderableTrail(const ghoul::Dictionary& dictionary)
     }
 
     addPropertySubOwner(_appearance);
-
-    if (dictionary.hasKeyAndValue<std::string>(RenderBinModeInfo.identifier)) {
-        openspace::Renderable::RenderBin cfgRenderBin = RenderBinModeConversion.at(
-            dictionary.value<std::string>(RenderBinModeInfo.identifier)
-        );
-        setRenderBin(cfgRenderBin);
-    }
 }
 
 void RenderableTrail::initializeGL() {

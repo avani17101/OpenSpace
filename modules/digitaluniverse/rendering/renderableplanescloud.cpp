@@ -429,6 +429,17 @@ RenderablePlanesCloud::RenderablePlanesCloud(const ghoul::Dictionary& dictionary
         { BlendModeNormal, "Normal" },
         { BlendModeAdditive, "Additive" }
     });
+
+    if (dictionary.hasKey(BlendModeInfo.identifier)) {
+        const std::string& v = dictionary.value<std::string>(BlendModeInfo.identifier);
+        if (v == "Normal") {
+            _blendMode = BlendModeNormal;
+        }
+        else if (v == "Additive") {
+            _blendMode = BlendModeAdditive;
+        }
+    }
+
     _blendMode.onChange([&]() {
         switch (_blendMode) {
             case BlendModeNormal:
@@ -442,15 +453,7 @@ RenderablePlanesCloud::RenderablePlanesCloud(const ghoul::Dictionary& dictionary
         }
     });
 
-    if (dictionary.hasKey(BlendModeInfo.identifier)) {
-        const std::string& v = dictionary.value<std::string>(BlendModeInfo.identifier);
-        if (v == "Normal") {
-            _blendMode = BlendModeNormal;
-        }
-        else if (v == "Additive") {
-            _blendMode = BlendModeAdditive;
-        }
-    }
+    addProperty(_blendMode);
 
     _texturesPath = absPath(dictionary.value<std::string>(TexturePathInfo.identifier));
 
