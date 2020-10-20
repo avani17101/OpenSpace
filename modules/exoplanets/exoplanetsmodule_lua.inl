@@ -117,7 +117,7 @@ void createExoplanetSystem(const std::string& starName) {
 
             if (!hasSufficientData(p)) {
                 LERROR(fmt::format(
-                    "Insufficient data available for visualizion of exoplanet system: '{}'",
+                    "Insufficient data available for visualization of exoplanet system: '{}'",
                     starName
                 ));
                 return;
