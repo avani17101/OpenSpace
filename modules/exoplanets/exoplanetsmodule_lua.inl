@@ -75,7 +75,6 @@ void createExoplanetSystem(std::string_view starName) {
     }
 
     std::ifstream data(absPath(ExoplanetsDataPath), std::ios::in | std::ios::binary);
-
     if (!data.good()) {
         LERROR(fmt::format(
             "Failed to open exoplanets data file: '{}'", absPath(ExoplanetsDataPath)
@@ -249,13 +248,13 @@ void createExoplanetSystem(std::string_view starName) {
         float planetRadius;
         std::string enabled;
 
-        const float astronomicalUnit = static_cast<float>(distanceconstants::AstronomicalUnit);
+        const float au = static_cast<float>(distanceconstants::AstronomicalUnit);
         const float solarRadius = static_cast<float>(distanceconstants::SolarRadius);
         const float jupiterRadius = static_cast<float>(distanceconstants::JupiterRadius);
 
         if (std::isnan(planet.r)) {
             if (std::isnan(planet.rStar)) {
-                planetRadius = planet.a * 0.001f * astronomicalUnit;
+                planetRadius = planet.a * 0.001f * au;
             }
             else {
                 planetRadius = planet.rStar * 0.1f * solarRadius;
@@ -268,7 +267,7 @@ void createExoplanetSystem(std::string_view starName) {
         }
 
         const float period = static_cast<float>(planet.per * SecondsPerDay);
-        const float semiMajorAxisInMeter = planet.a * astronomicalUnit;
+        const float semiMajorAxisInMeter = planet.a * au;
         const float semiMajorAxisInKm = semiMajorAxisInMeter * 0.001f;
 
         const std::string planetIdentifier = createIdentifier(planetName);
@@ -527,4 +526,5 @@ int listAvailableExoplanetSystems(lua_State* L) {
 
     return 0;
 }
+
 } //namespace openspace::exoplanets::luascriptfunctions
