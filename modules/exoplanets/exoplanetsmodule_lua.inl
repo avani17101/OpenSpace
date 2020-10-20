@@ -152,18 +152,13 @@ void createExoplanetSystem(const std::string& starName) {
             // @TODO (emmbr, 2020-10-12) should also check the bv value for the siblings.
             // The data on the planets is derived from different sources, so while this
             // planet has a nan value, another might not
-            const std::string color = starColor(p.bmv);
-
-            if (color.empty()) {
-                LERROR("Error occurred when computing star color");
-                return;
-            }
+            const glm::vec3 color = starColor(p.bmv);
 
             layers = "ColorLayers = {"
                 "{"
                     "Identifier = 'StarColor',"
                     "Type = 'SolidColor',"
-                    "Color = " + color + ","
+                    "Color = " + fmt::format("{}", color) + ","
                     "BlendMode = 'Normal',"
                     "Enabled = true"
                 "},"
