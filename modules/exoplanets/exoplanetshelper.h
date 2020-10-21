@@ -27,6 +27,7 @@
 
 #include <ghoul/glm.h>
 #include <string>
+#include <vector>
 
 namespace openspace::exoplanets {
 
@@ -64,6 +65,19 @@ struct Exoplanet {
     float positionX;    // Star position's X-coordinate in parsec
     float positionY;    // Star position's Y-coordinate in parsec
     float positionZ;    // Star position's Z-coordinate in parsec
+};
+
+struct StarData {
+    glm::vec3 position; // In parsec
+    float radius;       // In solar radii
+    float bvColorIndex;
+};
+
+struct ExoplanetSystem {
+    std::string starName;
+    StarData starData;
+    std::vector<std::string> planetNames;
+    std::vector<Exoplanet> planetsData;
 };
 
 // Check if the exoplanet p has sufficient data for visualization
