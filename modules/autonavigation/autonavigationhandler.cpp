@@ -94,13 +94,6 @@ namespace {
         "in the direction of the camera position at the start of the path."
     };
 
-    constexpr openspace::properties::Property::PropertyInfo IntegrationResolutionInfo = {
-        "IntegrationResolution",
-        "Path Integration Resolution",
-        "The number of steps used to integrate along the spline curve every frame. A "
-        "larger number increases the precision, at the cost of reduced efficiency."
-    };
-
     constexpr openspace::properties::Property::PropertyInfo SpeedScaleInfo = {
         "SpeedScale",
         "Speed Scale",
@@ -120,7 +113,6 @@ AutoNavigationHandler::AutoNavigationHandler()
     , _applyStopBehaviorWhenIdle(ApplyStopBehaviorWhenIdleInfo, false)
     , _relevantNodeTags(RelevantNodeTagsInfo)
     , _defaultPositionOffsetAngle(DefaultPositionOffsetAngleInfo, 30.f, -90.f, 90.f)
-    , _integrationResolutionPerFrame(IntegrationResolutionInfo, 100, 10, 500)
     , _speedScale(SpeedScaleInfo, 1.f, 0.01f, 2.f)
 {
     addPropertySubOwner(_atNodeNavigator);
@@ -153,7 +145,6 @@ AutoNavigationHandler::AutoNavigationHandler()
     addProperty(_relevantNodeTags);
 
     addProperty(_defaultPositionOffsetAngle);
-    addProperty(_integrationResolutionPerFrame);
     addProperty(_speedScale);
 }
 
@@ -174,10 +165,6 @@ bool AutoNavigationHandler::hasFinished() const {
 
 const std::vector<SceneGraphNode*>& AutoNavigationHandler::relevantNodes() const {
     return _relevantNodes;
-}
-
-int AutoNavigationHandler::integrationResolutionPerFrame() const {
-    return _integrationResolutionPerFrame;
 }
 
 double AutoNavigationHandler::speedScale() const {

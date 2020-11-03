@@ -29,11 +29,12 @@
 #include <modules/autonavigation/helperfunctions.h>
 #include <modules/autonavigation/pathcurves.h>
 #include <modules/autonavigation/rotationinterpolator.h>
-#include <modules/autonavigation/speedfunction.h>
 #include <modules/autonavigation/zoomoutoverviewcurve.h>
 #include <openspace/engine/globals.h>
 #include <openspace/engine/moduleengine.h>
+#include <openspace/interaction/navigationhandler.h>
 #include <openspace/scene/scenegraphnode.h>
+#include <openspace/util/camera.h>
 #include <ghoul/logging/logmanager.h>
 
 namespace {
@@ -59,12 +60,13 @@ PathSegment::PathSegment(Waypoint start, Waypoint end, CurveType type,
         auto module = global::moduleEngine->module<AutoNavigationModule>();
         _duration /= module->AutoNavigationHandler().speedScale();
     }
+
+    _prevPose = start.pose;
 }
 
 void PathSegment::setStart(Waypoint cs) {
     _start = std::move(cs);
     initCurve();
-    // TODO later: maybe recompute duration as well...
 }
 
 const Waypoint PathSegment::start() const { return _start; }
@@ -80,27 +82,55 @@ const std::vector<glm::dvec3> PathSegment::getControlPoints() const {
     return _curve->getPoints();
 }
 
+double PathSegment::currentSpeed() const {
+    // @TODO (emmbr, 2020-11-03) Ideally the speed should also depend on the size of
+    // the visible object
+
+    const SceneGraphNode* anchor = global::navigationHandler->anchorNode();
+    const glm::dvec3 anchorPosition = anchor->worldPosition();
+    double distanceToCurrentAnchor = glm::distance(_prevPose.position, anchorPosition);
+    distanceToCurrentAnchor -= anchor->boundingSphere();
+    double speed = distanceToCurrentAnchor;
+
+    const double dampenStartUpTime = 2.0;
+
+    // Dampen speed in beginning of path
+    if (_progressedTime < dampenStartUpTime) {
+        speed *= ghoul::cubicEaseIn(_progressedTime / dampenStartUpTime);
+    }
+
+    // Dampen speed in end of path, based on distance to target node
+    // (At the end it's difficult to use time to dampen the motion, since we do not know
+    // exactly how long it will take to reach th target)
+    const double isCloseThreshold = static_cast<double>(5.f * anchor->boundingSphere());
+    const double hasArrivedDistance = pathLength() - isCloseThreshold;
+    if (_traveledDistance > pathLength() - isCloseThreshold) {
+        const double distanceToEndPos = glm::distance(_prevPose.position, _end.position());
+        speed *= ghoul::quadraticEaseIn(distanceToEndPos / isCloseThreshold) + 0.1;
+    }
+
+    return speed;
+}
+
 CameraPose PathSegment::traversePath(double dt) {
-    if (!_curve || !_rotationInterpolator || !_speedFunction) {
+    if (!_curve || !_rotationInterpolator) {
         // TODO: handle better (abort path somehow)
         return _start.pose;
     }
 
-    AutoNavigationModule* module = global::moduleEngine->module<AutoNavigationModule>();
-    AutoNavigationHandler& handler = module->AutoNavigationHandler();
-    const int nSteps = handler.integrationResolutionPerFrame();
+    auto module = global::moduleEngine->module<AutoNavigationModule>();
+    const double speedScale = module->AutoNavigationHandler().speedScale();
 
-    double displacement = helpers::simpsonsRule(
-        _progressedTime,
-        _progressedTime + dt,
-        nSteps,
-        [this](double t) { return speedAtTime(t); }
-    );
-
+    double displacement = currentSpeed() * speedScale * dt;
     _progressedTime += dt;
     _traveledDistance += displacement;
 
-    return interpolatedPose(_traveledDistance);
+    //LINFO(fmt::format("Traveled path ratio: {}", _traveledDistance / pathLength()));
+
+    CameraPose pose = interpolatedPose(_traveledDistance);
+    _prevPose = pose;
+
+    return pose;
 }
 
 std::string PathSegment::getCurrentAnchor() const {
@@ -110,10 +140,6 @@ std::string PathSegment::getCurrentAnchor() const {
 
 bool PathSegment::hasReachedEnd() const {
     return (_traveledDistance / pathLength()) >= 1.0;
-}
-
-double PathSegment::speedAtTime(double time) const {
-    return _speedFunction->scaledValue(time, _duration, pathLength());
 }
 
 CameraPose PathSegment::interpolatedPose(double distance) const {
@@ -135,7 +161,6 @@ void PathSegment::initCurve() {
             _start.rotation(),
             _end.rotation()
         );
-        _speedFunction = std::make_unique<QuinticDampenedSpeed>();
         break;
 
     case CurveType::Linear:
@@ -144,7 +169,6 @@ void PathSegment::initCurve() {
             _start.rotation(),
             _end.rotation()
         );
-        _speedFunction = std::make_unique<QuinticDampenedSpeed>();
         break;
 
     case CurveType::ZoomOutOverview:
@@ -156,7 +180,6 @@ void PathSegment::initCurve() {
             _end.node()->worldPosition(),
             _curve.get()
         );
-        _speedFunction = std::make_unique<QuinticDampenedSpeed>();
         break;
 
     default:
@@ -164,7 +187,7 @@ void PathSegment::initCurve() {
         return;
     }
 
-    if (!_curve || !_rotationInterpolator || !_speedFunction) {
+    if (!_curve || !_rotationInterpolator) {
         LERROR("Curve type has not been properly initialized.");
         return;
     }
