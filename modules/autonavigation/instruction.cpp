@@ -35,9 +35,9 @@
 namespace {
     constexpr const char* _loggerCat = "PathInstruction";
 
-    constexpr const char* KeyDuration = "Duration";
     constexpr const char* KeyStopAtTarget = "StopAtTarget";
     constexpr const char* KeyStopDetails = "StopDetails";
+    constexpr const char* KeyDuration = "Duration";
     constexpr const char* KeyBehavior = "Behavior";
 
     constexpr const char* KeyTarget = "Target";
@@ -50,11 +50,6 @@ namespace {
 namespace openspace::autonavigation {
 
 Instruction::Instruction(const ghoul::Dictionary& dictionary) {
-    if (dictionary.hasValue<double>(KeyDuration)) {
-        duration = dictionary.value<double>(KeyDuration);
-    }
-
-    // TODO: include info about pauses/stops
     if (dictionary.hasValue<bool>(KeyStopAtTarget)) {
         stopAtTarget = dictionary.value<bool>(KeyStopAtTarget);
     }

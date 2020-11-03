@@ -35,8 +35,7 @@ namespace openspace::autonavigation {
 
 class PathSegment {
 public:
-    PathSegment(Waypoint start, Waypoint end, CurveType type,
-        std::optional<double> duration = std::nullopt);
+    PathSegment(Waypoint start, Waypoint end, CurveType type);
 
     ~PathSegment() = default;
 
@@ -46,7 +45,6 @@ public:
     // Accessors
     const Waypoint start() const;
     const Waypoint end() const;
-    const double duration() const;
     const double pathLength() const;
 
     const std::vector<glm::dvec3> getControlPoints() const; // debugging
@@ -63,7 +61,6 @@ private:
 
     Waypoint _start;
     Waypoint _end;
-    double _duration;
     CurveType _curveType;
 
     std::unique_ptr<RotationInterpolator> _rotationInterpolator;

@@ -45,22 +45,10 @@ namespace {
 
 namespace openspace::autonavigation {
 
-PathSegment::PathSegment(Waypoint start, Waypoint end, CurveType type,
-                         std::optional<double> duration)
+PathSegment::PathSegment(Waypoint start, Waypoint end, CurveType type)
     : _start(start), _end(end), _curveType(type)
 {
     initCurve();
-
-    if (duration.has_value()) {
-        _duration = duration.value();
-    }
-    else {
-        _duration = std::log(pathLength());
-
-        auto module = global::moduleEngine->module<AutoNavigationModule>();
-        _duration /= module->AutoNavigationHandler().speedScale();
-    }
-
     _prevPose = start.pose;
 }
 
@@ -72,8 +60,6 @@ void PathSegment::setStart(Waypoint cs) {
 const Waypoint PathSegment::start() const { return _start; }
 
 const Waypoint PathSegment::end() const { return _end; }
-
-const double PathSegment::duration() const { return _duration; }
 
 const double PathSegment::pathLength() const { return _curve->length(); }
 

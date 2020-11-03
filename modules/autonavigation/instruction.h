@@ -41,8 +41,6 @@ struct Instruction {
     // TODO
     //static documentation::Documentation Documentation();
 
-    std::optional<double> duration;
-
     std::optional<bool> stopAtTarget;
 
     // only relevant is stopAtTarget true

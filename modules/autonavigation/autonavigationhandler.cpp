@@ -523,8 +523,7 @@ void AutoNavigationHandler::addSegment(const Instruction* ins, int index) {
     _pathSegments.push_back(std::make_unique<PathSegment>(
         lastWayPoint(),
         waypointToAdd,
-        CurveType(curveType),
-        ins->duration
+        CurveType(curveType)
     ));
 }
 
